@@ -220,7 +220,7 @@ namespace catapult { namespace tools { namespace nemgen {
 		if (1 <= config.SignedTransactionEntries.size()) {
 			auto pBlockExtended = AppendSignedTransactions(*pBlock, transactions.transactions(), config.SignedTransactionEntries);
 
-			CATAPULT_LOG(debug) << "Signing extended nemesis block";
+			CATAPULT_LOG(debug) << "Signing extended nemesis block with size: " << pBlockExtended->Size;
 
 			extensions::BlockExtensions(config.NemesisGenerationHash).signFullBlock(signer, *pBlockExtended);
 			return pBlockExtended;
@@ -259,27 +259,9 @@ namespace catapult { namespace tools { namespace nemgen {
 
 	std::unique_ptr<model::Block> CopyBlockReallocate(model::Block& block, size_t oldSize, size_t newSize) {
 		auto pNewBlock = utils::MakeUniqueWithSize<model::Block>(newSize);
-
-		// - copy block content and 0 rest
+		std::memset(static_cast<void*>(pNewBlock.get()), 0, newSize);
+		std::memcpy(pNewBlock.get(), &block, oldSize);
 		pNewBlock->Size = newSize;
-		pNewBlock->SignerPublicKey = block.SignerPublicKey;
-		pNewBlock->BeneficiaryPublicKey = block.BeneficiaryPublicKey;
-
-		pNewBlock->Version = block.Version;
-		pNewBlock->Network = block.Network;
-		pNewBlock->Type = block.Type;
-
-		pNewBlock->Height = block.Height;
-		pNewBlock->Difficulty = block.Difficulty;
-		pNewBlock->PreviousBlockHash = block.PreviousBlockHash;
-
-		auto cursorTransactionsPtr = oldSize - sizeof(model::BlockHeader);
-		std::memcpy(
-			reinterpret_cast<uint8_t*>(pNewBlock->TransactionsPtr()),
-			reinterpret_cast<uint8_t*>(block.TransactionsPtr()),
-			cursorTransactionsPtr
-		);
-
 		return pNewBlock;
 	}
 

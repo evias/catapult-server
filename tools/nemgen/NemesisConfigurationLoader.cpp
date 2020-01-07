@@ -20,6 +20,7 @@
 
 #include "NemesisConfigurationLoader.h"
 #include "catapult/model/Address.h"
+#include "catapult/crypto/KeyUtils.h"
 #include "catapult/utils/ConfigurationBag.h"
 #include "catapult/utils/HexFormatter.h"
 #include <boost/filesystem.hpp>
@@ -96,6 +97,22 @@ namespace catapult { namespace tools { namespace nemgen {
 					CATAPULT_LOG(debug) << " - - " << seed.Name << ": " << seed.Amount;
 			}
 
+			CATAPULT_LOG(debug);
+			return true;
+		}
+
+		bool LogTransactions(const NemesisConfiguration& config) {
+			CATAPULT_LOG(debug) << "Signed Transactions Summary";
+			for (const auto& pair : config.SignedTransactionEntries) {
+				const auto& signerPublicKey = pair.first;
+				const auto& transactionEntry = pair.second;
+
+				CATAPULT_LOG(debug) << " - Signer: " << signerPublicKey;
+				CATAPULT_LOG(debug) << " - Payload: " << transactionEntry.hexPayload();
+
+				CATAPULT_LOG(debug);
+			}
+
 			return true;
 		}
 	}
@@ -124,6 +141,9 @@ namespace catapult { namespace tools { namespace nemgen {
 		LogNamespaces(config);
 
 		// - mosaic definitions and distribution
-		return LogMosaicDefinitions(config) && LogMosaicDistribution(config);
+		auto mosaicResult = LogMosaicDefinitions(config) && LogMosaicDistribution(config);
+
+		// - transactions
+		return mosaicResult && LogTransactions(config);
 	}
 }}}

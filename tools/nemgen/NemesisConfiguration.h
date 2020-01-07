@@ -22,6 +22,7 @@
 #include "catapult/model/NetworkIdentifier.h"
 #include "catapult/state/MosaicEntry.h"
 #include "catapult/state/RootNamespace.h"
+#include "state/SignedTransactionEntry.h"
 #include "catapult/utils/Hashers.h"
 #include <string>
 #include <unordered_map>
@@ -51,6 +52,9 @@ namespace catapult { namespace tools { namespace nemgen {
 
 	/// Mapping of addresses to mosaic seeds.
 	using AddressToMosaicSeedsMap = std::vector<std::pair<std::string, std::vector<MosaicSeed>>>;
+
+	/// Mapping of signer public keys to signed transaction entries
+	using SignerToSignedTransactionMap = std::vector<std::pair<std::string, state::SignedTransactionEntry>>;
 
 	/// Nemesis configuration.
 	struct NemesisConfiguration {
@@ -84,6 +88,9 @@ namespace catapult { namespace tools { namespace nemgen {
 
 		/// Map of nemesis account addresses to mosaic seeds.
 		AddressToMosaicSeedsMap NemesisAddressToMosaicSeeds;
+
+		/// Map containing all signed transaction entries.
+		SignerToSignedTransactionMap SignedTransactionEntries;
 
 	public:
 		/// Loads a nemesis configuration from \a bag.

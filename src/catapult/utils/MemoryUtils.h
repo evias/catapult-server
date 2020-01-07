@@ -52,7 +52,7 @@ namespace catapult { namespace utils {
 	/// Copies \a count bytes from \a pSrc to \a pDest.
 	/// \note This wrapper only requires valid pointers when \a count is nonzero.
 	inline void memcpy_cond(void* pDest, const void* pSrc, size_t count) {
-		if (0 < count)
+		if (pDest && 0 < count)
 			std::memcpy(pDest, pSrc, count);
 	}
 }}

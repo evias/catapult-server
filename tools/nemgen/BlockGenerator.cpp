@@ -259,7 +259,7 @@ namespace catapult { namespace tools { namespace nemgen {
 	std::unique_ptr<model::Block> CopyBlockReallocate(model::Block& block, size_t oldSize, size_t newSize) {
 		auto pNewBlock = utils::MakeUniqueWithSize<model::Block>(newSize);
 		std::memset(static_cast<void*>(pNewBlock.get()), 0, newSize);
-		std::memcpy(pNewBlock.get(), &block, oldSize);
+		std::memcpy(static_cast<void*>(pNewBlock.get()), &block, oldSize);
 		pNewBlock->Size = newSize;
 		return pNewBlock;
 	}

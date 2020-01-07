@@ -1,10 +1,12 @@
 cmake_minimum_required(VERSION 3.2)
 
 add_subdirectory(blockhashes)
+add_subdirectory(state)
 
 catapult_define_tool(nemgen)
 target_link_libraries(catapult.tools.nemgen
 	catapult.tools.nemgen.blockhashes
+	catapult.tools.nemgen.state
 	catapult.plugins.mosaic
 	catapult.plugins.namespace
 	catapult.plugins.transfer)

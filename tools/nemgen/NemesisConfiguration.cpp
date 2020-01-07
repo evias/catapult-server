@@ -22,6 +22,9 @@
 #include "catapult/crypto/KeyPair.h"
 #include "catapult/crypto/KeyUtils.h"
 #include "catapult/extensions/IdGenerator.h"
+#include "catapult/io/EntityIoUtils.h"
+#include "catapult/io/BufferInputStreamAdapter.h"
+#include "catapult/model/Transaction.h"
 #include "catapult/model/MosaicIdGenerator.h"
 #include "catapult/model/NamespaceIdGenerator.h"
 #include "catapult/state/Namespace.h"
@@ -106,6 +109,15 @@ namespace catapult { namespace tools { namespace nemgen {
 			return ToMosaicEntry(definition, mosaicNonce, supply);
 		}
 
+		auto CreateSignedTransactionEntry(const std::string& signer, const std::string& hexPayload) {
+			// 1) read signer public key
+			auto signerPubKey = crypto::ParseKey(signer);
+
+			// 2) create transaction entry
+			auto entry = state::SignedTransactionEntry(hexPayload, signerPubKey);
+			return entry;
+		}
+
 		size_t LoadNamespaces(const utils::ConfigurationBag& bag, NemesisConfiguration& config, const Key& owner) {
 			auto namespaces = bag.getAllOrdered<bool>("namespaces");
 			auto numNamespaceProperties = namespaces.size();
@@ -171,6 +183,30 @@ namespace catapult { namespace tools { namespace nemgen {
 
 			return numMosaicProperties;
 		}
+
+		size_t LoadTransactions(const utils::ConfigurationBag& bag, NemesisConfiguration& config) {
+			auto transactions = bag.getAllOrdered<std::string>("transactions");
+			auto numTransactionProperties = transactions.size();
+
+			for (const auto& transaction : transactions) {
+				const auto& signerPublicKey = transaction.first;
+				const auto& transactionBytes = transaction.second;
+
+				if (!crypto::IsValidKeyString(signerPublicKey))
+					CATAPULT_THROW_INVALID_ARGUMENT_1("public key is not valid", signerPublicKey);
+
+				// - transaction entry
+				auto transactionEntry = CreateSignedTransactionEntry(signerPublicKey, transactionBytes);
+
+				// - add information
+				if (config.SignedTransactionEntries.cend() != FindByKey(config.SignedTransactionEntries, signerPublicKey))
+					CATAPULT_THROW_RUNTIME_ERROR_1("multiple transactions for", signerPublicKey);
+
+				config.SignedTransactionEntries.emplace_back(signerPublicKey, transactionEntry);
+			}
+
+			return numTransactionProperties;
+		}
 	}
 
 #define LOAD_PROPERTY(SECTION, NAME) utils::LoadIniProperty(bag, SECTION, #NAME, config.NAME)
@@ -208,7 +244,10 @@ namespace catapult { namespace tools { namespace nemgen {
 		// load mosaics information
 		auto numMosaicProperties = LoadMosaics(bag, config, owner);
 
-		utils::VerifyBagSizeLte(bag, 6 + numNamespaceProperties + numMosaicProperties);
+		// load signed transactions information
+		auto numTransactionProperties = LoadTransactions(bag, config);
+
+		utils::VerifyBagSizeLte(bag, 6 + numNamespaceProperties + numMosaicProperties + numTransactionProperties);
 		return config;
 	}
 }}}

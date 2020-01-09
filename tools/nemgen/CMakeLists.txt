@@ -9,4 +9,6 @@ target_link_libraries(catapult.tools.nemgen
 	catapult.tools.nemgen.state
 	catapult.plugins.mosaic
 	catapult.plugins.namespace
-	catapult.plugins.transfer)
+	catapult.plugins.transfer
+	catapult.plugins.multisig
+	catapult.plugins.aggregate)

@@ -49,37 +49,4 @@ namespace catapult { namespace tools { namespace nemgen {
 	/// Wraps a block element around \a block according to \a config.
 	model::BlockElement CreateNemesisBlockElement(const NemesisConfiguration& config, const model::Block& block);
 
-	/// Calculates the size of \a block with its latest transaction of \a transactions padded if necessary.
-	size_t CalculateSizeOfPaddedNemesisBlock(
-		model::Block& block,
-		const model::Transactions& transactions);
-
-	/// Calculates the size of \a block with its latest transaction of \a transactions padded if necessary
-	/// and added \a signedTransactions.
-	size_t CalculateSizeWithAddedSignedTransactions(
-		model::Block& block,
-		const model::Transactions& transactions,
-		SignerToSignedTransactionMap signedTransactions);
-	
-	/// Copy a \a block to a new block re-allocating memory to extended \a newSize
-	std::unique_ptr<model::Block> CopyBlockReallocate(
-		model::Block& block,
-		size_t oldSize,
-		size_t newSize);
-
-	/// Allocate extended memory for \a block to add \a signedTransactions.
-	std::unique_ptr<model::Block> AppendSignedTransactions(
-		model::Block& block,
-		const model::Transactions& transactions,
-		SignerToSignedTransactionMap signedTransactions);
-
-	/// Adds padding for last transaction of \a transaction starting at \a pDestination.
-	size_t AddLastTransactionPadding(
-		uint8_t* pDestination,
-		const model::Transactions& transactions);
-
-	/// Adds signed transactions \a signedTransactions starting at \a pDestination.
-	void AddSignedTransactions(
-		uint8_t* pDestination,
-		SignerToSignedTransactionMap signedTransactions);
 }}}

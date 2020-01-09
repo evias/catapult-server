@@ -33,8 +33,8 @@ namespace catapult { namespace extensions {
 			if (observers::NotifyMode::Commit != context.Mode || Height(1) != context.Height)
 				CATAPULT_THROW_INVALID_ARGUMENT("NemesisFundingObserver only supports commit mode for nemesis block");
 
-			if (nemesisPublicKey != notification.Sender)
-				CATAPULT_THROW_INVALID_ARGUMENT_1("unexpected nemesis transfer from account", notification.Sender);
+			//if (nemesisPublicKey != notification.Sender)
+			//	CATAPULT_THROW_INVALID_ARGUMENT_1("unexpected nemesis transfer from account", notification.Sender);
 
 			auto& cache = context.Cache.sub<cache::AccountStateCache>();
 			cache.addAccount(notification.Sender, context.Height);
@@ -43,7 +43,10 @@ namespace catapult { namespace extensions {
 			auto& senderState = senderIter.get();
 
 			auto mosaicId = context.Resolvers.resolve(notification.MosaicId);
-			fundingState.TotalFundedMosaics.credit(mosaicId, notification.Amount);
+
+			// if nemesis account is sender, count in TotalFundedMosaics
+			if (nemesisPublicKey == notification.Sender)
+				fundingState.TotalFundedMosaics.credit(mosaicId, notification.Amount);
 
 			// if the account state balance is zero when the first transfer is made, implicitly fund the nemesis account
 			// assume that all mosaics are funded in same way (i.e. nemesis cannot have mix of implicitly and explicitly funded mosaics)

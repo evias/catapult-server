@@ -49,7 +49,7 @@ namespace catapult { namespace state {
 		size_t AddTransaction(const std::string& payload) const {
 			//XXX verify/validate size
 
-			m_rawPayloads.push(TryParsePayload(payload));
+			m_rawPayloads.push_back(TryParsePayload(payload));
 			m_hexPayloads.push_back(payload);
 
 			return size();
@@ -79,7 +79,7 @@ namespace catapult { namespace state {
 		}
 
 		/// Gets the hexadecimal payload.
-		std::vector<std::string>& payloads() const {
+		std::vector<std::string> payloads() const {
 			return m_hexPayloads;
 		}
 

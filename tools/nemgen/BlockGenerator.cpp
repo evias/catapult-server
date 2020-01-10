@@ -60,10 +60,10 @@ namespace catapult { namespace tools { namespace nemgen {
 			// each signed transaction get padded
 			for (const auto& transactionPayloadPair : signedTransactions) {
 				auto transactionEntry = transactionPayloadPair.second;
-				auto transactionPayloads = transactionEntry.payloads();
+				auto transactionPayloads = transactionEntry.GetPayloads();
 				for (const auto& payload : transactionPayloads) {
-					lastPadding = utils::GetPaddingSize(payload.size(), 8);
-					newSize += payload.size() + lastPadding;
+					lastPadding = utils::GetPaddingSize(payload.GetSize(), 8);
+					newSize += payload.GetSize() + lastPadding;
 				}
 			}
 

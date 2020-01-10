@@ -45,7 +45,7 @@ namespace catapult { namespace state {
 
 		size_t AddTransaction(const std::string& payload) {
 			this->m_payloads.push_back(SignedTransactionPayload(payload));
-			return size();
+			return GetSize();
 		}
 
 	public:

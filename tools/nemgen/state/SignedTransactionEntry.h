@@ -31,21 +31,15 @@ namespace catapult { namespace state {
 		/// Creates an uninitialized entry.
 		SignedTransactionEntry()
 				: m_pSigner(nullptr)
-				, m_payloads{}
+				, m_pPayload(nullptr)
 		{
 		}
 
 		/// Creates an entry around \a payload and \a signer.
 		SignedTransactionEntry(const std::string& payload, const Key& signer)
 				: m_pSigner(&signer)
-				, m_payloads{}
 		{
-			this->m_payloads.push_back(SignedTransactionPayload(payload));
-		}
-
-		size_t AddTransaction(const std::string& payload) {
-			this->m_payloads.push_back(SignedTransactionPayload(payload));
-			return GetSize();
+			m_pPayload = new SignedTransactionPayload(payload);
 		}
 
 	public:
@@ -55,17 +49,12 @@ namespace catapult { namespace state {
 		}
 
 		/// Gets the signed transaction payloads.
-		const std::vector<SignedTransactionPayload>& GetPayloads() {
-			return m_payloads;
-		}
-
-		/// Gets the number of signed payloads.
-		size_t GetSize() const {
-			return m_payloads.size();
+		const SignedTransactionPayload& GetPayload() {
+			return *m_pPayload;
 		}
 
 	private:
 		const Key* m_pSigner;
-		std::vector<SignedTransactionPayload> m_payloads;
+		const SignedTransactionPayload* m_pPayload;
 	};
 }}

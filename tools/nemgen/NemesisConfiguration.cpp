@@ -189,24 +189,26 @@ namespace catapult { namespace tools { namespace nemgen {
 			auto numTransactionProperties = transactions.size();
 
 			for (const auto& transaction : transactions) {
-				const auto& signerPublicKey = transaction.first;
+				const auto& transactionKey = transaction.first;
 				const auto& transactionBytes = transaction.second;
+
+				std::string nisTransactionId,
+							signerPublicKey;
+				std::getline(transactionKey, nisTransactionId, '_');
+				std::getline(transactionKey, signerPublicKey, '_');
 
 				if (!crypto::IsValidKeyString(signerPublicKey))
 					CATAPULT_THROW_INVALID_ARGUMENT_1("public key is not valid", signerPublicKey);
 
 				// - transaction entry
 				auto transactionEntry = CreateSignedTransactionEntry(signerPublicKey, transactionBytes);
-				auto signerEntryPair = FindByKey(config.SignedTransactionEntries, signerPublicKey);
+				auto signerEntryPair = FindByKey(config.SignedTransactionEntries, transactionKey);
 
 				if (config.SignedTransactionEntries.cend() != signerEntryPair) {
-					CATAPULT_LOG(debug) << "multiple transactions for signer: " << signerPublicKey;
-					size_t count = signerEntryPair->second.AddTransaction(transactionBytes);
-					CATAPULT_LOG(debug) << "now have " << count << " transactions for signer: " << signerPublicKey;
+					CATAPULT_THROW_INVALID_ARGUMENT_1("multiple transactions with key", transactionKey);
 				}
-				else {
-					config.SignedTransactionEntries.emplace_back(signerPublicKey, transactionEntry);
-				}
+
+				config.SignedTransactionEntries.emplace_back(transactionKey, transactionEntry);
 			}
 
 			return numTransactionProperties;

@@ -106,11 +106,12 @@ namespace catapult { namespace tools { namespace nemgen {
 			for (const auto& pair : config.SignedTransactionEntries) {
 				const auto& signerPublicKey = pair.first;
 				const auto& transactionEntry = pair.second;
+				auto transactionPayloads = transactionEntry.GetPayloads();
 
 				CATAPULT_LOG(debug) << " - Signer: " << signerPublicKey;
 
 				auto i = 0u;
-				for (const auto& payload : transactionEntry.GetPayloads()) {
+				for (const auto& payload : transactionPayloads) {
 					CATAPULT_LOG(debug) << " - Payload (" << i << "): " << payload.ToHex();
 					++i;
 				}

@@ -199,10 +199,10 @@ namespace catapult { namespace tools { namespace nemgen {
 				auto transactionEntry = CreateSignedTransactionEntry(signerPublicKey, transactionBytes);
 				auto signerEntryPair = FindByKey(config.SignedTransactionEntries, signerPublicKey);
 
-				if (config.SignedTransactionEntries.cend() !== signerEntryPair) {
-					CATAPULT_LOG(debug) << "multiple transactions for signer: " << signedPublicKey;
+				if (config.SignedTransactionEntries.cend() != signerEntryPair) {
+					CATAPULT_LOG(debug) << "multiple transactions for signer: " << signerPublicKey;
 					size_t count = signerEntryPair.second.AddTransaction(transactionBytes);
-					CATAPULT_LOG(debug) << "now have " << count << " transactions for signer: " << signedPublicKey;
+					CATAPULT_LOG(debug) << "now have " << count << " transactions for signer: " << signerPublicKey;
 				}
 				else {
 					config.SignedTransactionEntries.emplace_back(signerPublicKey, transactionEntry);

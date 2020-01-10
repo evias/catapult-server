@@ -57,7 +57,7 @@ namespace catapult { namespace state {
 
 	protected:
 
-		std::vector<uint8_t> TryParsePayload(std::string payload) {
+		std::vector<uint8_t> TryParsePayload(const std::string& payload) {
 			// - parse transaction payload to binary
 			auto rawPayload = std::vector<uint8_t>(payload.size() / 2);
 			auto parseResult = utils::TryParseHexStringIntoContainer(

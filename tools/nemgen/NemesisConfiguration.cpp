@@ -67,13 +67,15 @@ namespace catapult { namespace tools { namespace nemgen {
 		}
 
 		template <class Container>
-		void Split(const std::string& str, Container& cont, char delim = ' ')
+		size_t Split(const std::string& str, Container& cont, char delim = ' ')
 		{
 			std::stringstream sstr(str);
 			std::string token;
 			while (std::getline(sstr, token, delim)) {
 				cont.push_back(token);
 			}
+
+			return cont.size();
 		}
 
 		auto IsRoot(const std::string& namespaceName) {
@@ -205,11 +207,11 @@ namespace catapult { namespace tools { namespace nemgen {
 				const auto& transactionKey = transaction.first;
 				const auto& transactionBytes = transaction.second;
 
-				std::vector<std::string> keyParts = std::vector<std::string>(2);
+				std::vector<std::string> keyParts;
 				Split(transactionKey, keyParts, '_');
 
 				if (keyParts.size() != 2) {
-					CATAPULT_THROW_INVALID_ARGUMENT_1("expected format nisTransactionId_signerPublicKey for key but got: ", transactionKey);
+					CATAPULT_THROW_INVALID_ARGUMENT_1("expected format nisTransactionId_signerPublicKey for key but got size: ", keyParts.size());
 				}
 
 				// signer is the second part of the key.

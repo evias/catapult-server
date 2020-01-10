@@ -24,6 +24,9 @@
 #include "catapult/plugins/MosaicSupplyChangeTransactionPlugin.h"
 #include "catapult/plugins/NamespaceRegistrationTransactionPlugin.h"
 #include "catapult/plugins/TransferTransactionPlugin.h"
+#include "catapult/plugins/MultisigAccountModificationTransactionPlugin.h"
+#include "catapult/plugins/AggregateTransactionPlugin.h"
+#include "catapult/utils/TimeSpan.h"
 
 namespace catapult { namespace tools { namespace nemgen {
 
@@ -36,6 +39,9 @@ namespace catapult { namespace tools { namespace nemgen {
 		registry.registerPlugin(plugins::CreateMosaicSupplyChangeTransactionPlugin());
 		registry.registerPlugin(plugins::CreateNamespaceRegistrationTransactionPlugin(namespaceConfig));
 		registry.registerPlugin(plugins::CreateTransferTransactionPlugin());
+		registry.registerPlugin(plugins::CreateMultisigAccountModificationTransactionPlugin());
+		//registry.registerPlugin(plugins::CreateAggregateTransactionPlugin(registry, model::Entity_Type_Aggregate_Complete));
+		//registry.registerPlugin(plugins::CreateAggregateTransactionPlugin(registry, utils::TimeSpan::FromHours(48), model::Entity_Type_Aggregate_Bonded));
 		return registry;
 	}
 }}}

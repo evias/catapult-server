@@ -55,8 +55,12 @@ namespace catapult { namespace extensions {
 	}
 
 	void BlockExtensions::calculateBlockTransactionsHash(const model::Block& block, Hash256& blockTransactionsHash) const {
+		CATAPULT_LOG(debug) << "Calculting block transactions hash";
 		crypto::MerkleHashBuilder builder;
 		for (const auto& transaction : block.Transactions()) {
+			CATAPULT_LOG(debug) << "Including transaction with Type " << transaction.Type
+								<< " and Size " << transaction.Size;
+
 			auto transactionHash = m_calculateTransactionEntityHash(transaction);
 			auto merkleComponentHash = m_calculateTransactionMerkleComponentHash(transaction, transactionHash);
 			builder.update(merkleComponentHash);

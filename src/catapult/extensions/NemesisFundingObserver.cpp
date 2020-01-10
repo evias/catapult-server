@@ -56,7 +56,7 @@ namespace catapult { namespace extensions {
 						: NemesisFundingType::Implicit;
 			}
 
-			if (NemesisFundingType::Explicit == fundingState.FundingType)
+			if (NemesisFundingType::Explicit == fundingState.FundingType && nemesisPublicKey == notification.Sender)
 				return;
 
 			senderState.Balances.credit(mosaicId, notification.Amount);

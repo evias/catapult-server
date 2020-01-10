@@ -7,8 +7,8 @@ catapult_define_tool(nemgen)
 target_link_libraries(catapult.tools.nemgen
 	catapult.tools.nemgen.blockhashes
 	catapult.tools.nemgen.state
+	catapult.plugins.aggregate
 	catapult.plugins.mosaic
 	catapult.plugins.namespace
-	catapult.plugins.transfer
 	catapult.plugins.multisig
-	catapult.plugins.aggregate)
+	catapult.plugins.transfer)

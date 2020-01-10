@@ -103,12 +103,15 @@ namespace catapult { namespace tools { namespace nemgen {
 
 		bool LogTransactions(const NemesisConfiguration& config) {
 			CATAPULT_LOG(debug) << "Signed Transactions Summary";
+			auto i = 0u;
 			for (const auto& pair : config.SignedTransactionEntries) {
-				const auto& signerPublicKey = pair.first;
-				const auto& transactionEntry = pair.second;
+				const auto& transactionKey = pair.first;
+				auto transactionEntry = pair.second;
+				auto transactionPayload = transactionEntry.GetPayload();
 
-				CATAPULT_LOG(debug) << " - Signer: " << signerPublicKey;
-				CATAPULT_LOG(debug) << " - Payload: " << transactionEntry.hexPayload();
+				CATAPULT_LOG(debug) << " - Transaction Key: " << transactionKey;
+				CATAPULT_LOG(debug) << " - Transaction Payload (" << i << "): " << transactionPayload.ToHex();
+				++i;
 
 				CATAPULT_LOG(debug);
 			}

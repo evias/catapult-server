@@ -59,10 +59,9 @@ namespace catapult { namespace tools { namespace nemgen {
 			// each signed transaction get padded
 			for (const auto& transactionPayloadPair : signedTransactions) {
 				auto transactionEntry = transactionPayloadPair.second;
-				auto transactionBinary = transactionEntry.rawPayload();
-				lastPadding = utils::GetPaddingSize(transactionBinary.size(), 8);
-
-				newSize += transactionBinary.size() + lastPadding;
+				auto payload = transactionEntry.GetPayload();
+				lastPadding = utils::GetPaddingSize(payload.GetSize(), 8);
+				newSize += payload.GetSize() + lastPadding;
 			}
 
 			// last signed transaction not padded
@@ -70,10 +69,10 @@ namespace catapult { namespace tools { namespace nemgen {
 			return newSize;
 		}
 
-		std::unique_ptr<model::Block> CopyBlockReallocate(model::Block& block, size_t oldSize, size_t newSize) {
+		std::unique_ptr<model::Block> CopyBlockReallocate(model::Block& block, size_t newSize) {
 			auto pNewBlock = utils::MakeUniqueWithSize<model::Block>(newSize);
 			std::memset(static_cast<void*>(pNewBlock.get()), 0, newSize);
-			std::memcpy(static_cast<void*>(pNewBlock.get()), &block, oldSize);
+			std::memcpy(static_cast<void*>(pNewBlock.get()), &block, block.Size);
 			pNewBlock->Size = newSize;
 			return pNewBlock;
 		}
@@ -84,12 +83,11 @@ namespace catapult { namespace tools { namespace nemgen {
 			auto lastTransaction = transactions[last];
 			auto paddingSize = utils::GetPaddingSize(lastTransaction->Size, 8);
 
-			CATAPULT_LOG(debug) << "Padding last nemesis transaction";
-			CATAPULT_LOG(debug) << "- Last Transaction Size: " << lastTransaction->Size;
-			CATAPULT_LOG(debug) << "- Padding Needed Size: " << paddingSize;
+			if (0 < paddingSize) {
+				std::memset(static_cast<void*>(pDestination), 0, paddingSize);
+				pDestination += paddingSize;
+			}
 
-			std::memset(static_cast<void*>(pDestination), 0, paddingSize);
-			pDestination += paddingSize;
 			return paddingSize;
 		}
 
@@ -97,31 +95,26 @@ namespace catapult { namespace tools { namespace nemgen {
 			CATAPULT_LOG(debug);
 			CATAPULT_LOG(debug) << "Appending signed transactions";
 			CATAPULT_LOG(debug) << "- Count Signed Transaction Payloads: " << signedTransactions.size();
+			CATAPULT_LOG(debug);
 
 			// 2) each signed transaction is appended and padded
 			auto i = 0u;
 			for (const auto& transactionPayloadPair : signedTransactions) {
 				auto transactionEntry = transactionPayloadPair.second;
-				auto transactionBinary = transactionEntry.rawPayload();
-
-				CATAPULT_LOG(debug) << "Appending signed transaction payload (" << i << ")";
-				CATAPULT_LOG(debug) << "- Transaction Payload: " << transactionEntry.hexPayload();
-				CATAPULT_LOG(debug) << "- Transaction Size: " << transactionBinary.size();
+				auto transactionPayload = transactionEntry.GetPayload();
+				const auto& transactionBinary = transactionPayload.ToBinary();
 
 				// copy transaction data into block
 				std::memcpy(pDestination, transactionBinary.data(), transactionBinary.size());
 				pDestination += transactionBinary.size();
 
-				// pad transaction data if more available
+				// pad transaction data only if more available
 				if (i < signedTransactions.size() - 1) {
 					auto paddingSize = utils::GetPaddingSize(transactionBinary.size(), 8);
-
-					CATAPULT_LOG(debug) << "Padding signed transaction payload (" << i << ")";
-					CATAPULT_LOG(debug) << "- Padding Needed Size: " << paddingSize;
-
 					std::memset(static_cast<void*>(pDestination), 0, paddingSize);
 					pDestination += paddingSize;
 				}
+				++i;
 			}
 		}
 
@@ -137,12 +130,8 @@ namespace catapult { namespace tools { namespace nemgen {
 				signedTransactions
 			);
 
-			CATAPULT_LOG(debug) << "Resizing block";
-			CATAPULT_LOG(debug) << "- Old Size: " << block.Size;
-			CATAPULT_LOG(debug) << "- New Size: " << newSize;
-
 			// - re-create block with extended size
-			auto pNewBlock = CopyBlockReallocate(block, oldSize, newSize);
+			auto pNewBlock = CopyBlockReallocate(block, newSize);
 
 			CATAPULT_LOG(debug) << "Copied old block";
 			CATAPULT_LOG(debug) << "Old block size: " << block.Size;
@@ -154,7 +143,6 @@ namespace catapult { namespace tools { namespace nemgen {
 			AddLastTransactionPadding(pDestination, transactions);
 			AddSignedTransactions(pDestination, signedTransactions);
 
-			CATAPULT_LOG(debug) << "Signed transactions added";
 			return pNewBlock;
 		}
 	}
@@ -335,10 +323,15 @@ namespace catapult { namespace tools { namespace nemgen {
 
 		if (1 <= config.SignedTransactionEntries.size()) {
 			auto pBlockExtended = AppendSignedTransactions(*pBlock, transactions.transactions(), config.SignedTransactionEntries);
-
 			CATAPULT_LOG(debug) << "Signing extended nemesis block with size: " << pBlockExtended->Size;
-
 			extensions::BlockExtensions(config.NemesisGenerationHash).signFullBlock(signer, *pBlockExtended);
+
+			// verify modified block
+			auto result = extensions::BlockExtensions(config.NemesisGenerationHash).verifyFullBlock(*pBlockExtended);
+			if (extensions::VerifyFullBlockResult::Success != result) {
+				CATAPULT_THROW_RUNTIME_ERROR("Full block verification failure");
+			}
+
 			return pBlockExtended;
 		}
 		

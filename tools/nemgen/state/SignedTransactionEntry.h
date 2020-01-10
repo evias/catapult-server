@@ -19,9 +19,7 @@
 **/
 
 #pragma once
-#include "catapult/model/Transaction.h"
-#include "catapult/exceptions.h"
-#include "catapult/utils/HexParser.h"
+#include "SignedTransactionPayload.h"
 #include <vector>
 #include <string>
 
@@ -33,47 +31,30 @@ namespace catapult { namespace state {
 		/// Creates an uninitialized entry.
 		SignedTransactionEntry()
 				: m_pSigner(nullptr)
-				, m_hexPayload("")
-				, m_rawPayload{}
+				, m_pPayload(nullptr)
 		{
 		}
 
-		/// Creates an entry around \a transaction and \a signer.
+		/// Creates an entry around \a payload and \a signer.
 		SignedTransactionEntry(const std::string& payload, const Key& signer)
 				: m_pSigner(&signer)
-				, m_hexPayload(payload)
 		{
-			// - parse transaction payload to binary
-			m_rawPayload = std::vector<uint8_t>(m_hexPayload.size() / 2);
-			auto parseResult = utils::TryParseHexStringIntoContainer(
-				m_hexPayload.c_str(),
-				m_hexPayload.size(),
-				m_rawPayload
-			);
-
-			if (false == parseResult)
-				CATAPULT_THROW_INVALID_ARGUMENT_1("transaction payload must be hexadecimal", m_hexPayload);
+			m_pPayload = new SignedTransactionPayload(payload);
 		}
 
 	public:
 		/// Gets the signer.
-		const Key& signer() const {
+		const Key& GetSigner() const {
 			return *m_pSigner;
 		}
 
-		/// Gets the hexadecimal payload.
-		std::string hexPayload() const {
-			return m_hexPayload;
-		}
-
-		/// Gets the raw payload.
-		const std::vector<uint8_t>& rawPayload() const {
-			return m_rawPayload;
+		/// Gets the signed transaction payloads.
+		const SignedTransactionPayload& GetPayload() {
+			return *m_pPayload;
 		}
 
 	private:
 		const Key* m_pSigner;
-		std::string m_hexPayload;
-		std::vector<uint8_t> m_rawPayload;
+		const SignedTransactionPayload* m_pPayload;
 	};
 }}

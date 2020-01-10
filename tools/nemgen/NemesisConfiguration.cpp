@@ -19,7 +19,9 @@
 **/
 
 #include "NemesisConfiguration.h"
+#include "state/SignedTransactionEntry.h"
 #include "catapult/crypto/KeyPair.h"
+#include "catapult/crypto/KeyUtils.h"
 #include "catapult/extensions/IdGenerator.h"
 #include "catapult/io/EntityIoUtils.h"
 #include "catapult/io/BufferInputStreamAdapter.h"
@@ -29,6 +31,10 @@
 #include "catapult/state/Namespace.h"
 #include "catapult/utils/ConfigurationBag.h"
 #include "catapult/utils/ConfigurationUtils.h"
+#include "catapult/utils/HexParser.h"
+#include <sstream>
+#include <algorithm>
+#include <iterator>
 
 namespace catapult { namespace tools { namespace nemgen {
 
@@ -60,6 +66,18 @@ namespace catapult { namespace tools { namespace nemgen {
 
 				iter->second.push_back({ mosaicName, Amount(addressAmountPair.second) });
 			}
+		}
+
+		template <class Container>
+		size_t Split(const std::string& str, Container& cont, char delim = ' ')
+		{
+			std::stringstream sstr(str);
+			std::string token;
+			while (std::getline(sstr, token, delim)) {
+				cont.push_back(token);
+			}
+
+			return cont.size();
 		}
 
 		auto IsRoot(const std::string& namespaceName) {
@@ -110,7 +128,7 @@ namespace catapult { namespace tools { namespace nemgen {
 
 		auto CreateSignedTransactionEntry(const std::string& signer, const std::string& hexPayload) {
 			// 1) read signer public key
-			auto signerPubKey = crypto::ParseKey(signer);
+			auto signerPubKey = utils::ParseByteArray<Key>(signer);
 
 			// 2) create transaction entry
 			auto entry = state::SignedTransactionEntry(hexPayload, signerPubKey);
@@ -188,20 +206,26 @@ namespace catapult { namespace tools { namespace nemgen {
 			auto numTransactionProperties = transactions.size();
 
 			for (const auto& transaction : transactions) {
-				const auto& signerPublicKey = transaction.first;
+				const auto& transactionKey = transaction.first;
 				const auto& transactionBytes = transaction.second;
 
+				// split format %d_%s with NISTransactionId and SignerPublicKey
+				std::vector<std::string> keyParts;
+				Split(transactionKey, keyParts, '_');
+				if (keyParts.size() != 2)
+					CATAPULT_THROW_INVALID_ARGUMENT_1("expected format nisTransactionId_signerPublicKey for key but got size: ", keyParts.size());
+
+				// signer is the second part of the key.
+				const auto& signerPublicKey = keyParts.at(1);
 				if (!crypto::IsValidKeyString(signerPublicKey))
 					CATAPULT_THROW_INVALID_ARGUMENT_1("public key is not valid", signerPublicKey);
 
 				// - transaction entry
 				auto transactionEntry = CreateSignedTransactionEntry(signerPublicKey, transactionBytes);
+				if (config.SignedTransactionEntries.cend() != FindByKey(config.SignedTransactionEntries, transactionKey))
+					CATAPULT_THROW_INVALID_ARGUMENT_1("multiple transactions with key", transactionKey);
 
-				// - add information
-				if (config.SignedTransactionEntries.cend() != FindByKey(config.SignedTransactionEntries, signerPublicKey))
-					CATAPULT_THROW_RUNTIME_ERROR_1("multiple transactions for", signerPublicKey);
-
-				config.SignedTransactionEntries.emplace_back(signerPublicKey, transactionEntry);
+				config.SignedTransactionEntries.emplace_back(transactionKey, transactionEntry);
 			}
 
 			return numTransactionProperties;

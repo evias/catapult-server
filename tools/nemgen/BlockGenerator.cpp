@@ -70,7 +70,7 @@ namespace catapult { namespace tools { namespace nemgen {
 			return newSize;
 		}
 
-		std::unique_ptr<model::Block> CopyBlockReallocate(model::Block& block, size_t oldSize, size_t newSize) {
+		std::unique_ptr<model::Block> CopyBlockReallocate(model::Block& block, size_t newSize) {
 			auto pNewBlock = utils::MakeUniqueWithSize<model::Block>(newSize);
 			std::memset(static_cast<void*>(pNewBlock.get()), 0, newSize);
 			std::memcpy(static_cast<void*>(pNewBlock.get()), &block, block.Size);
@@ -91,7 +91,6 @@ namespace catapult { namespace tools { namespace nemgen {
 			if (0 < paddingSize) {
 				std::memset(static_cast<void*>(pDestination), 0, paddingSize);
 				pDestination += paddingSize;
-				lastTransaction->Size += paddingSize;
 			}
 
 			return paddingSize;
@@ -149,7 +148,7 @@ namespace catapult { namespace tools { namespace nemgen {
 			CATAPULT_LOG(debug) << "- New Size: " << newSize;
 
 			// - re-create block with extended size
-			auto pNewBlock = CopyBlockReallocate(block, oldSize, newSize);
+			auto pNewBlock = CopyBlockReallocate(block, newSize);
 
 			CATAPULT_LOG(debug) << "Copied old block";
 			CATAPULT_LOG(debug) << "Old block size: " << block.Size;

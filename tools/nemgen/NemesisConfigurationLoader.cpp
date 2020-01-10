@@ -108,7 +108,12 @@ namespace catapult { namespace tools { namespace nemgen {
 				const auto& transactionEntry = pair.second;
 
 				CATAPULT_LOG(debug) << " - Signer: " << signerPublicKey;
-				CATAPULT_LOG(debug) << " - Payload: " << transactionEntry.hexPayload();
+
+				auto i = 0u;
+				for (const auto& payload : transactionEntry.payloads()) {
+					CATAPULT_LOG(debug) << " - Payload (" << i << "): " << payload;
+					++i;
+				}
 
 				CATAPULT_LOG(debug);
 			}

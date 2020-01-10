@@ -33,27 +33,44 @@ namespace catapult { namespace state {
 		/// Creates an uninitialized entry.
 		SignedTransactionEntry()
 				: m_pSigner(nullptr)
-				, m_hexPayload("")
-				, m_rawPayload{}
+				, m_hexPayloads{}
+				, m_rawPayloads{}
 		{
 		}
 
 		/// Creates an entry around \a transaction and \a signer.
 		SignedTransactionEntry(const std::string& payload, const Key& signer)
 				: m_pSigner(&signer)
-				, m_hexPayload(payload)
+				, m_hexPayloads{payload}
 		{
+			m_rawPayloads.push_back(TryParsePayload(payload));
+		}
+
+		size_t AddTransaction(const std::string& payload) const {
+			//XXX verify/validate size
+
+			m_rawPayloads.push(TryParsePayload(payload));
+			m_hexPayloads.push_back(payload);
+
+			return size();
+		}
+
+	protected:
+
+		std::vector<uint8_t> TryParsePayload(std::string payload) {
 			// - parse transaction payload to binary
-			m_rawPayload = std::vector<uint8_t>(m_hexPayload.size() / 2);
+			auto rawPayload = std::vector<uint8_t>(payload.size() / 2);
 			auto parseResult = utils::TryParseHexStringIntoContainer(
-				m_hexPayload.c_str(),
-				m_hexPayload.size(),
-				m_rawPayload
+				payload.c_str(),
+				payload.size(),
+				rawPayload
 			);
 
 			if (false == parseResult)
-				CATAPULT_THROW_INVALID_ARGUMENT_1("transaction payload must be hexadecimal", m_hexPayload);
-		}
+				CATAPULT_THROW_INVALID_ARGUMENT_1("transaction payload must be hexadecimal", payload);
+
+			return rawPayload;
+		} 
 
 	public:
 		/// Gets the signer.
@@ -62,18 +79,23 @@ namespace catapult { namespace state {
 		}
 
 		/// Gets the hexadecimal payload.
-		std::string hexPayload() const {
-			return m_hexPayload;
+		std::vector<std::string>& payloads() const {
+			return m_hexPayloads;
 		}
 
 		/// Gets the raw payload.
-		const std::vector<uint8_t>& rawPayload() const {
-			return m_rawPayload;
+		const std::vector<std::vector<uint8_t>>& rawPayloads() const {
+			return m_rawPayloads;
+		}
+
+		/// Gets the number of signed payloads.
+		size_t size() const {
+			return m_rawPayloads.size();
 		}
 
 	private:
 		const Key* m_pSigner;
-		std::string m_hexPayload;
-		std::vector<uint8_t> m_rawPayload;
+		std::vector<std::string> m_hexPayloads;
+		std::vector<std::vector<uint8_t>> m_rawPayloads;
 	};
 }}

@@ -60,10 +60,11 @@ namespace catapult { namespace tools { namespace nemgen {
 			// each signed transaction get padded
 			for (const auto& transactionPayloadPair : signedTransactions) {
 				auto transactionEntry = transactionPayloadPair.second;
-				auto transactionBinary = transactionEntry.rawPayload();
-				lastPadding = utils::GetPaddingSize(transactionBinary.size(), 8);
-
-				newSize += transactionBinary.size() + lastPadding;
+				auto transactionBinaries = transactionEntry.rawPayloads();
+				for (const auto& transactionBinary : transactionBinaries) {
+					lastPadding = utils::GetPaddingSize(transactionBinary.size(), 8);
+					newSize += transactionBinary.size() + lastPadding;
+				}
 			}
 
 			// last signed transaction not padded
@@ -101,28 +102,40 @@ namespace catapult { namespace tools { namespace nemgen {
 
 			// 2) each signed transaction is appended and padded
 			auto i = 0u;
+			auto total = 0u;
 			for (const auto& transactionPayloadPair : signedTransactions) {
 				auto transactionEntry = transactionPayloadPair.second;
-				auto transactionBinary = transactionEntry.rawPayload();
+				auto transactionBinaries = transactionEntry.rawPayloads();
 
-				CATAPULT_LOG(debug) << "Appending signed transaction payload (" << i << ")";
-				CATAPULT_LOG(debug) << "- Transaction Payload: " << transactionEntry.hexPayload();
-				CATAPULT_LOG(debug) << "- Transaction Size: " << transactionBinary.size();
+				auto j = 0u;
+				for (const auto& transactionBinary : transactionBinaries) {
 
-				// copy transaction data into block
-				std::memcpy(pDestination, transactionBinary.data(), transactionBinary.size());
-				pDestination += transactionBinary.size();
+					CATAPULT_LOG(debug) << "Appending signed transaction payload (" << total << ")";
+					CATAPULT_LOG(debug) << "- Transaction Payload: " << transactionEntry.payloads().at(j);
+					CATAPULT_LOG(debug) << "- Transaction Size: " << transactionBinary.size();
 
-				// pad transaction data if more available
-				if (i < signedTransactions.size() - 1) {
-					auto paddingSize = utils::GetPaddingSize(transactionBinary.size(), 8);
+					// copy transaction data into block
+					std::memcpy(pDestination, transactionBinary.data(), transactionBinary.size());
+					pDestination += transactionBinary.size();
 
-					CATAPULT_LOG(debug) << "Padding signed transaction payload (" << i << ")";
-					CATAPULT_LOG(debug) << "- Padding Needed Size: " << paddingSize;
+					// pad transaction data only if more available
+					bool hasRemaining = (i < signedTransactions.size() - 1) || (
+						i == signedTransactions.size() - 1 && j < transactionBinaries.size() - 1
+					);
 
-					std::memset(static_cast<void*>(pDestination), 0, paddingSize);
-					pDestination += paddingSize;
+					if (hasRemaining) {
+						auto paddingSize = utils::GetPaddingSize(transactionBinary.size(), 8);
+
+						CATAPULT_LOG(debug) << "Padding signed transaction payload (" << i << ")";
+						CATAPULT_LOG(debug) << "- Padding Needed Size: " << paddingSize;
+
+						std::memset(static_cast<void*>(pDestination), 0, paddingSize);
+						pDestination += paddingSize;
+					}
+					++j;
+					++total;
 				}
+				++i;
 			}
 		}
 

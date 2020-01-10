@@ -197,12 +197,16 @@ namespace catapult { namespace tools { namespace nemgen {
 
 				// - transaction entry
 				auto transactionEntry = CreateSignedTransactionEntry(signerPublicKey, transactionBytes);
+				auto signerEntryPair = FindByKey(config.SignedTransactionEntries, signerPublicKey);
 
-				// - add information
-				if (config.SignedTransactionEntries.cend() != FindByKey(config.SignedTransactionEntries, signerPublicKey))
-					CATAPULT_THROW_RUNTIME_ERROR_1("multiple transactions for", signerPublicKey);
-
-				config.SignedTransactionEntries.emplace_back(signerPublicKey, transactionEntry);
+				if (config.SignedTransactionEntries.cend() !== signerEntryPair) {
+					CATAPULT_LOG(debug) << "multiple transactions for signer: " << signedPublicKey;
+					size_t count = signerEntryPair.second.AddTransaction(transactionBytes);
+					CATAPULT_LOG(debug) << "now have " << count << " transactions for signer: " << signedPublicKey;
+				}
+				else {
+					config.SignedTransactionEntries.emplace_back(signerPublicKey, transactionEntry);
+				}
 			}
 
 			return numTransactionProperties;

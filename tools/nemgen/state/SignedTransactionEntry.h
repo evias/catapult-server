@@ -43,13 +43,11 @@ namespace catapult { namespace state {
 				: m_pSigner(&signer)
 				, m_payloads{}
 		{
-			const auto& pPayload = std::make_unique<SignedTransactionPayload>(payload);
-			m_payloads.push_back(std::move(pPayload));
+			this->m_payloads.push_back(SignedTransactionPayload(payload));
 		}
 
 		size_t AddTransaction(const std::string& payload) const {
-			const auto& pPayload = std::make_unique<SignedTransactionPayload>(payload);
-			m_payloads.push_back(std::move(pPayload));
+			this->m_payloads.push_back(SignedTransactionPayload(payload));
 			return size();
 		}
 
@@ -60,7 +58,7 @@ namespace catapult { namespace state {
 		}
 
 		/// Gets the signed transaction payloads.
-		const std::vector<SignedTransactionPayload>& payloads() const {
+		const std::vector<SignedTransactionPayload>& payloads() {
 			return m_payloads;
 		}
 
@@ -71,6 +69,6 @@ namespace catapult { namespace state {
 
 	private:
 		const Key* m_pSigner;
-		std::vector<std::unique_ptr<SignedTransactionPayload>> m_payloads;
+		std::vector<SignedTransactionPayload> m_payloads;
 	};
 }}

@@ -60,10 +60,10 @@ namespace catapult { namespace tools { namespace nemgen {
 			// each signed transaction get padded
 			for (const auto& transactionPayloadPair : signedTransactions) {
 				auto transactionEntry = transactionPayloadPair.second;
-				auto transactionBinaries = transactionEntry.rawPayloads();
-				for (const auto& transactionBinary : transactionBinaries) {
-					lastPadding = utils::GetPaddingSize(transactionBinary.size(), 8);
-					newSize += transactionBinary.size() + lastPadding;
+				auto transactionPayloads = transactionEntry.payloads();
+				for (const auto& payload : transactionPayloads) {
+					lastPadding = utils::GetPaddingSize(payload.size(), 8);
+					newSize += payload.size() + lastPadding;
 				}
 			}
 
@@ -105,14 +105,16 @@ namespace catapult { namespace tools { namespace nemgen {
 			auto total = 0u;
 			for (const auto& transactionPayloadPair : signedTransactions) {
 				auto transactionEntry = transactionPayloadPair.second;
-				auto transactionBinaries = transactionEntry.rawPayloads();
+				auto transactionPayloads = transactionEntry.payloads();
 
 				auto j = 0u;
-				for (const auto& transactionBinary : transactionBinaries) {
+				for (const auto& payload : transactionPayloads) {
 
 					CATAPULT_LOG(debug) << "Appending signed transaction payload (" << total << ")";
-					CATAPULT_LOG(debug) << "- Transaction Payload: " << transactionEntry.payloads().at(j);
-					CATAPULT_LOG(debug) << "- Transaction Size: " << transactionBinary.size();
+					CATAPULT_LOG(debug) << "- Transaction Payload: " << payload.toHex();
+					CATAPULT_LOG(debug) << "- Transaction Size: " << payload.size();
+
+					const auto& transactionBinary = payload.toBinary();
 
 					// copy transaction data into block
 					std::memcpy(pDestination, transactionBinary.data(), transactionBinary.size());
@@ -120,7 +122,7 @@ namespace catapult { namespace tools { namespace nemgen {
 
 					// pad transaction data only if more available
 					bool hasRemaining = (i < signedTransactions.size() - 1) || (
-						i == signedTransactions.size() - 1 && j < transactionBinaries.size() - 1
+						i == signedTransactions.size() - 1 && j < transactionPayloads.size() - 1
 					);
 
 					if (hasRemaining) {

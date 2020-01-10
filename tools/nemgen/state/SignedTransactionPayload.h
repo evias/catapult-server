@@ -19,7 +19,6 @@
 **/
 
 #pragma once
-#include "SignedTransactionPayload.h"
 #include "catapult/model/Transaction.h"
 #include "catapult/exceptions.h"
 #include "catapult/utils/HexParser.h"
@@ -28,49 +27,58 @@
 
 namespace catapult { namespace state {
 
-	/// Pair composed of a signer public key and a signed transaction payload
-	class SignedTransactionEntry {
+	/// 
+	class SignedTransactionPayload {
 	public:
 		/// Creates an uninitialized entry.
-		SignedTransactionEntry()
-				: m_pSigner(nullptr)
-				, m_payloads{}
+		SignedTransactionPayload()
+				: m_hexPayload("")
+				, m_rawPayload{}
 		{
 		}
 
-		/// Creates an entry around \a payload and \a signer.
-		SignedTransactionEntry(const std::string& payload, const Key& signer)
-				: m_pSigner(&signer)
-				, m_payloads{}
+		/// Creates a payyload around \a payload and \a signer.
+		SignedTransactionPayload(const std::string& payload)
+				: m_hexPayload(payload)
 		{
-			const auto& parsed = SignedTransactionPayload(payload);
-			m_payloads.push_back(parsed);
+			m_rawPayload = std::vector<uint8_t>(payload.size() / 2);
+			TryParsePayload(payload, m_rawPayload);
 		}
 
-		size_t AddTransaction(const std::string& payload) const {
-			const auto& parsed = SignedTransactionPayload(payload);
-			m_payloads.push_back(parsed);
-			return size();
-		}
+	protected:
+
+		size_t TryParsePayload(const std::string& payload, std::vector<uint8_t>& destination) {
+			// - parse transaction payload to binary
+			auto parseResult = utils::TryParseHexStringIntoContainer(
+				payload.c_str(),
+				payload.size(),
+				destination
+			);
+
+			if (false == parseResult)
+				CATAPULT_THROW_INVALID_ARGUMENT_1("transaction payload must be hexadecimal", payload);
+
+			return payload.size();
+		} 
 
 	public:
-		/// Gets the signer.
-		const Key& signer() const {
-			return *m_pSigner;
+		/// Gets the hexadecimal payload.
+		std::string toHex() const {
+			return m_hexPayload;
 		}
 
-		/// Gets the signed transaction payloads.
-		const std::vector<SignedTransactionPayload>& payloads() const {
-			return m_payloads;
+		/// Gets the raw payload.
+		const std::vector<uint8_t>& toBinary() const {
+			return m_rawPayload;
 		}
 
-		/// Gets the number of signed payloads.
+		/// Gets the size of the signed transaction.
 		size_t size() const {
-			return m_payloads.size();
+			return m_rawPayload.size();
 		}
 
 	private:
-		const Key* m_pSigner;
-		std::vector<SignedTransactionPayload> m_payloads;
+		std::string m_hexPayload;
+		std::vector<uint8_t> m_rawPayload;
 	};
 }}

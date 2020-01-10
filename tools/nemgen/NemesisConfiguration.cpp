@@ -212,7 +212,7 @@ namespace catapult { namespace tools { namespace nemgen {
 					CATAPULT_THROW_INVALID_ARGUMENT_1("expected format nisTransactionId_signerPublicKey for key but got: ", transactionKey);
 				}
 
-				const auto& nisTransactionId = keyParts.at(0);
+				// signer is the second part of the key.
 				const auto& signerPublicKey = keyParts.at(1);
 
 				if (!crypto::IsValidKeyString(signerPublicKey))

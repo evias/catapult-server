@@ -46,7 +46,7 @@ namespace catapult { namespace state {
 			this->m_payloads.push_back(SignedTransactionPayload(payload));
 		}
 
-		size_t AddTransaction(const std::string& payload) const {
+		size_t AddTransaction(const std::string& payload) {
 			this->m_payloads.push_back(SignedTransactionPayload(payload));
 			return size();
 		}

@@ -79,39 +79,6 @@ namespace catapult { namespace tools { namespace nemgen {
 			return pNewBlock;
 		}
 
-		std::unique_ptr<model::Block> AppendSignedTransactions(
-			model::Block& block,
-			const model::Transactions& transactions,
-			SignerToSignedTransactionMap signedTransactions) {
-			// - calculate old size with added padding and new size with signed transactions
-			uint32_t oldSize = CalculateSizeOfPaddedNemesisBlock(block, transactions);
-			uint32_t newSize = CalculateSizeWithAddedSignedTransactions(
-				block,
-				transactions,
-				signedTransactions
-			);
-
-			CATAPULT_LOG(debug) << "Resizing block";
-			CATAPULT_LOG(debug) << "- Old Size: " << block.Size;
-			CATAPULT_LOG(debug) << "- New Size: " << newSize;
-
-			// - re-create block with extended size
-			auto pNewBlock = CopyBlockReallocate(block, oldSize, newSize);
-
-			CATAPULT_LOG(debug) << "Copied old block";
-			CATAPULT_LOG(debug) << "Old block size: " << block.Size;
-			CATAPULT_LOG(debug) << "New block size: " << pNewBlock->Size;
-
-			// - add signed transactions data *after* nemesis transactions
-			auto cursorPosition = oldSize - sizeof(model::BlockHeader);
-			auto* pDestination = reinterpret_cast<uint8_t*>(pNewBlock->TransactionsPtr()) + cursorPosition;
-			AddLastTransactionPadding(pDestination, transactions);
-			AddSignedTransactions(pDestination, signedTransactions);
-
-			CATAPULT_LOG(debug) << "Signed transactions added";
-			return pNewBlock;
-		}
-
 		size_t AddLastTransactionPadding(uint8_t* pDestination, const model::Transactions& transactions) {
 			// 1) add padding for last nemesis transaction
 			const auto last = transactions.size() - 1;
@@ -157,6 +124,39 @@ namespace catapult { namespace tools { namespace nemgen {
 					pDestination += paddingSize;
 				}
 			}
+		}
+
+		std::unique_ptr<model::Block> AppendSignedTransactions(
+			model::Block& block,
+			const model::Transactions& transactions,
+			SignerToSignedTransactionMap signedTransactions) {
+			// - calculate old size with added padding and new size with signed transactions
+			uint32_t oldSize = CalculateSizeOfPaddedNemesisBlock(block, transactions);
+			uint32_t newSize = CalculateSizeWithAddedSignedTransactions(
+				block,
+				transactions,
+				signedTransactions
+			);
+
+			CATAPULT_LOG(debug) << "Resizing block";
+			CATAPULT_LOG(debug) << "- Old Size: " << block.Size;
+			CATAPULT_LOG(debug) << "- New Size: " << newSize;
+
+			// - re-create block with extended size
+			auto pNewBlock = CopyBlockReallocate(block, oldSize, newSize);
+
+			CATAPULT_LOG(debug) << "Copied old block";
+			CATAPULT_LOG(debug) << "Old block size: " << block.Size;
+			CATAPULT_LOG(debug) << "New block size: " << pNewBlock->Size;
+
+			// - add signed transactions data *after* nemesis transactions
+			auto cursorPosition = oldSize - sizeof(model::BlockHeader);
+			auto* pDestination = reinterpret_cast<uint8_t*>(pNewBlock->TransactionsPtr()) + cursorPosition;
+			AddLastTransactionPadding(pDestination, transactions);
+			AddSignedTransactions(pDestination, signedTransactions);
+
+			CATAPULT_LOG(debug) << "Signed transactions added";
+			return pNewBlock;
 		}
 	}
 

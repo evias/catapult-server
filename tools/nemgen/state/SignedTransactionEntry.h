@@ -20,9 +20,6 @@
 
 #pragma once
 #include "SignedTransactionPayload.h"
-#include "catapult/model/Transaction.h"
-#include "catapult/exceptions.h"
-#include "catapult/utils/HexParser.h"
 #include <vector>
 #include <string>
 
@@ -53,17 +50,17 @@ namespace catapult { namespace state {
 
 	public:
 		/// Gets the signer.
-		const Key& signer() const {
+		const Key& GetSigner() const {
 			return *m_pSigner;
 		}
 
 		/// Gets the signed transaction payloads.
-		const std::vector<SignedTransactionPayload>& payloads() {
+		const std::vector<SignedTransactionPayload>& GetPayloads() {
 			return m_payloads;
 		}
 
 		/// Gets the number of signed payloads.
-		size_t size() const {
+		size_t GetSize() const {
 			return m_payloads.size();
 		}
 

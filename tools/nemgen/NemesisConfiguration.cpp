@@ -201,7 +201,7 @@ namespace catapult { namespace tools { namespace nemgen {
 
 				if (config.SignedTransactionEntries.cend() != signerEntryPair) {
 					CATAPULT_LOG(debug) << "multiple transactions for signer: " << signerPublicKey;
-					size_t count = signerEntryPair.AddTransaction(transactionBytes);
+					size_t count = signerEntryPair->second.AddTransaction(transactionBytes);
 					CATAPULT_LOG(debug) << "now have " << count << " transactions for signer: " << signerPublicKey;
 				}
 				else {

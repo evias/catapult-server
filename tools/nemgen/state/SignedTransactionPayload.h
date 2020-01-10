@@ -19,7 +19,6 @@
 **/
 
 #pragma once
-#include "catapult/model/Transaction.h"
 #include "catapult/exceptions.h"
 #include "catapult/utils/HexParser.h"
 #include <vector>
@@ -47,7 +46,7 @@ namespace catapult { namespace state {
 
 	protected:
 
-		size_t TryParsePayload(const std::string& payload, std::vector<uint8_t>& destination) {
+		size_t TryParsePayload(const std::string& payload, std::vector<uint8_t>& destination) const {
 			// - parse transaction payload to binary
 			auto parseResult = utils::TryParseHexStringIntoContainer(
 				payload.c_str(),
@@ -58,22 +57,22 @@ namespace catapult { namespace state {
 			if (false == parseResult)
 				CATAPULT_THROW_INVALID_ARGUMENT_1("transaction payload must be hexadecimal", payload);
 
-			return payload.size();
+			return destination.size();
 		} 
 
 	public:
 		/// Gets the hexadecimal payload.
-		std::string toHex() const {
+		std::string ToHex() const {
 			return m_hexPayload;
 		}
 
 		/// Gets the raw payload.
-		const std::vector<uint8_t>& toBinary() const {
+		const std::vector<uint8_t>& ToBinary() const {
 			return m_rawPayload;
 		}
 
 		/// Gets the size of the signed transaction.
-		size_t size() const {
+		size_t GetSize() const {
 			return m_rawPayload.size();
 		}
 

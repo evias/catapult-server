@@ -105,16 +105,16 @@ namespace catapult { namespace tools { namespace nemgen {
 			auto total = 0u;
 			for (const auto& transactionPayloadPair : signedTransactions) {
 				auto transactionEntry = transactionPayloadPair.second;
-				auto transactionPayloads = transactionEntry.payloads();
+				auto transactionPayloads = transactionEntry.GetPayloads();
 
 				auto j = 0u;
 				for (const auto& payload : transactionPayloads) {
 
 					CATAPULT_LOG(debug) << "Appending signed transaction payload (" << total << ")";
-					CATAPULT_LOG(debug) << "- Transaction Payload: " << payload.toHex();
-					CATAPULT_LOG(debug) << "- Transaction Size: " << payload.size();
+					CATAPULT_LOG(debug) << "- Transaction Payload: " << payload.ToHex();
+					CATAPULT_LOG(debug) << "- Transaction Size: " << payload.GetSize();
 
-					const auto& transactionBinary = payload.toBinary();
+					const auto& transactionBinary = payload.ToBinary();
 
 					// copy transaction data into block
 					std::memcpy(pDestination, transactionBinary.data(), transactionBinary.size());
